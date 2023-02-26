@@ -84,6 +84,7 @@ static int nettype_from_prefix(uint8_t *nettype, uint64_t prefix)
 int get_hashing_blob(const unsigned char *input, const size_t in_size,
         unsigned char **output, size_t *out_size)
 {
+    static unsigned char hash_buffer[HASH_SIZE];
     block b = AUTO_VAL_INIT(b);
     blobdata bd = std::string((const char*)input, in_size);
     if (!parse_and_validate_block_from_blob(bd, b))
@@ -93,10 +94,11 @@ int get_hashing_blob(const unsigned char *input, const size_t in_size,
 
     blobdata blob = get_block_hashing_blob(b);
     *out_size = blob.length();
-    *output = (unsigned char*) malloc(*out_size);
+    *output = hash_buffer;
     memcpy(*output, blob.data(), *out_size);
     return XMR_NO_ERROR;
 }
+
 
 int parse_address(const char *input, uint64_t *prefix,
         uint8_t *nettype, unsigned char *pub_spend)
