@@ -156,10 +156,15 @@ void set_rx_main_seedhash(const unsigned char *seed_hash)
 }
 
 void get_rx_hash(const unsigned char *seed_hash, const unsigned char *input,
-     const size_t in_size, unsigned char *output)
+        const size_t in_size, unsigned char *output)
 {
-    keccakf1600(seed_hash, 32, input, in_size, output, 32);
+    unsigned char full_hash[32];
+    keccak1600(seed_hash, 32, full_hash);
+    keccak1600(input, in_size, output);
+    for (int i = 0; i < 32; ++i)
+        output[i] ^= full_hash[i];
 }
+
 
 int validate_block_from_blob(const char *blob_hex,
         const unsigned char *sec_view,
