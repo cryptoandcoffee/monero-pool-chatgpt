@@ -34,7 +34,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <omp.h>
 
 #include "cryptonote_basic/cryptonote_basic.h"
 #include "cryptonote_basic/cryptonote_format_utils.h"
@@ -157,32 +156,9 @@ void set_rx_main_seedhash(const unsigned char *seed_hash)
 }
 
 void get_rx_hash(const unsigned char *seed_hash, const unsigned char *input,
-        const size_t in_size, unsigned char *output)
+     const size_t in_size, unsigned char *output)
 {
-    int i;
-    uint32_t prefetch_offset = 0;
-    char *long_state = (char*)malloc(256 * 4 * 8);
-    char *hash_state = (char*)malloc(256 * 8);
-    char *text = (char*)malloc(in_size + 4 + 64);
-    char *p = (char*)(((uintptr_t)text + 63) & ~63);
-    memcpy(p, input, in_size);
-    *((uint32_t*)(p + in_size)) = 0;
-    *((uint32_t*)(p + in_size + 4)) = in_size;
-#pragma omp parallel for private(i, prefetch_offset) shared(long_state, hash_state, p, text, seed_hash)
-    for (i = 0; i < 32; i++) {
-        prefetch_offset = i * 256;
-        get_rx_long_state(seed_hash, (const void*)(&prefetch_offset), (void*)(&long_state[prefetch_offset]));
-    }
-#pragma omp parallel for private(i, prefetch_offset) shared(long_state, hash_state, p, text)
-    for (i = 0; i < 32; i++) {
-        prefetch_offset = i * 256;
-        rx_slow_hash_long((const void*)(&long_state[prefetch_offset]), 256, (void*)(&hash_state[i * 8]));
-    }
-    rx_slow_hash_long((const void*)hash_state, 32 * 8, (void*)text);
-    rx_slow_hash_long((const void*)text, in_size + 4 + 64, (void*)output);
-    free(long_state);
-    free(hash_state);
-    free(text);
+    keccakf1600(seed_hash, 32, input, in_size, output, 32);
 }
 
 int validate_block_from_blob(const char *blob_hex,
