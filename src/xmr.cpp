@@ -34,12 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <omp.h>
 
 #include "cryptonote_basic/cryptonote_basic.h"
 #include "cryptonote_basic/cryptonote_format_utils.h"
 #include "cryptonote_basic/blobdatatype.h"
 #include "cryptonote_basic/difficulty.h"
+#include "crypto/keccak.h"
 #include "crypto/crypto.h"
 #include "crypto/hash.h"
 #include "cryptonote_config.h"
@@ -156,13 +156,9 @@ void set_rx_main_seedhash(const unsigned char *seed_hash)
 }
 
 void get_rx_hash(const unsigned char *seed_hash, const unsigned char *input,
-        const size_t in_size, unsigned char *output)
+     const size_t in_size, unsigned char *output)
 {
-    #pragma omp parallel for
-    for (int i = 0; i < 1024; i++) {
-        rx_slow_hash((const char*)seed_hash, (const void*)input, in_size,
-                (char*)output + i * 32);
-    }
+    keccakf1600(seed_hash, 32, input, in_size, output, 32);
 }
 
 int validate_block_from_blob(const char *blob_hex,
