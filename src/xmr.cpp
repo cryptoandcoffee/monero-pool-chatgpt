@@ -157,10 +157,12 @@ void set_rx_main_seedhash(const unsigned char *seed_hash)
 void get_rx_hash(const unsigned char *seed_hash, const unsigned char *input,
         const size_t in_size, unsigned char *output)
 {
-    rx_slow_hash_avx((const char*)seed_hash, (const void*)input, in_size,
-            (char*)output);
+    #pragma omp parallel for
+    for (int i = 0; i < 1024; i++) {
+        rx_slow_hash((const char*)seed_hash, (const void*)input, in_size,
+                (char*)output + i * 32);
+    }
 }
-
 
 int validate_block_from_blob(const char *blob_hex,
         const unsigned char *sec_view,
