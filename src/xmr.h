@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef __cplusplus
 extern "C" {
+    void keccak1600(const uint8_t *in, size_t inlen, uint8_t *out);
+}
 #endif
 
 enum xmr_error
